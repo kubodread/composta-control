@@ -14,6 +14,7 @@ export const cnRatioMaterials: CNMaterial[] = [
   // Nitrogen-Rich (Greens)
   { name: 'Recortes de Césped (Fresco)', ratio: '15-25:1', type: 'nitrogen' },
   { name: 'Restos de Frutas y Verduras', ratio: '12-20:1', type: 'nitrogen' },
+  { name: 'Restos de alimentos', ratio: '25-40:1', type: 'nitrogen' },
   { name: 'Posos de Café y Filtros', ratio: '20:1', type: 'nitrogen' },
   { name: 'Bolsitas/Hojas de Té', ratio: '30:1', type: 'nitrogen' },
   { name: 'Algas Marinas/Kelp', ratio: '5-20:1', type: 'nitrogen' },
