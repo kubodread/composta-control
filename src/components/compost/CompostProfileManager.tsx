@@ -36,7 +36,7 @@ export default function CompostProfileManager() {
   const [activeTab, setActiveTab] = useState<string | undefined>(undefined);
   const [profileToDelete, setProfileToDelete] = useState<CompostProfile | null>(null);
   const { toast } = useToast();
-
+/*
   useEffect(() => {
     if (profiles.length > 0 && !activeTab) {
       setActiveTab(profiles[0].id);
@@ -44,6 +44,26 @@ export default function CompostProfileManager() {
       setActiveTab(undefined);
     }
   }, [profiles, activeTab]);
+*/
+
+
+useEffect(() => {
+  // This effect runs after profiles have been potentially loaded from localStorage by useLocalStorage hook
+  if (profiles.length > 0) {
+    const currentActiveProfileExists = profiles.some(p => p.id === activeTab);
+    if (!activeTab || !currentActiveProfileExists) {
+      // If no activeTab is set, or the current activeTab profile doesn't exist anymore,
+      // set to the first profile in the list.
+      setActiveTab(profiles[0].id);
+    }
+  } else { // No profiles
+    if (activeTab !== undefined) { // If there was an active tab, clear it.
+      setActiveTab(undefined);
+    }
+  }
+}, [profiles, activeTab]);
+
+
 
   const handleCreateProfile = (name: string, initialComposition: string) => {
     const newProfile: CompostProfile = {
@@ -74,10 +94,11 @@ export default function CompostProfileManager() {
     const updatedProfiles = profiles.filter((p) => p.id !== profileToDelete.id);
     setProfiles(updatedProfiles);
     toast({ title: "Perfil Eliminado", description: `El perfil "${profileToDelete.name}" ha sido eliminado.`, variant: "destructive" });
-    setProfileToDelete(null);
+   
     if (activeTab === profileToDelete.id) {
       setActiveTab(updatedProfiles.length > 0 ? updatedProfiles[0].id : undefined);
     }
+     setProfileToDelete(null);
   };
   
   const updateProfile = (updatedProfile: CompostProfile) => {

@@ -3,6 +3,7 @@ import { Geist, Geist_Mono } from 'next/font/google'; // Corrected import
 import './globals.css';
 import { Toaster } from "@/components/ui/toaster";
 import AppHeader from '@/components/layout/AppHeader';
+import ServiceWorkerRegistrar from '@/components/layout/ServiceWorkerRegistrar'; // Importa el nuevo componente
 
 const geistSans = Geist({ // Corrected instantiation
   variable: '--font-geist-sans',
@@ -17,6 +18,7 @@ const geistMono = Geist_Mono({ // Corrected instantiation
 export const metadata: Metadata = {
   title: 'Controlador de Composta',
   description: 'Gestiona y optimiza tus pilas de composta con Controlador de Composta por Kubiotec.',
+  manifest: '/manifest.json',
 };
 
 export default function RootLayout({
@@ -30,6 +32,7 @@ export default function RootLayout({
         <AppHeader />
         <main className="p-4 md:p-6">{children}</main>
         <Toaster />
+        <ServiceWorkerRegistrar /> {/* Añade el componente de cliente aquí */}
       </body>
     </html>
   );
