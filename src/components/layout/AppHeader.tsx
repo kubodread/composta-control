@@ -10,7 +10,7 @@ export default function AppHeader() {
       <div className="container mx-auto px-4 h-16 flex items-center justify-between">
         <div className="flex items-center gap-2">
           <Leaf className="h-8 w-8 text-primary" />
-          <h1 className="text-xl font-semibold text-foreground">
+          <h1 className="text-xl font-semibold text-foreground leading-[.9rem]">
             Controlador de Composta
             <span className="text-sm text-muted-foreground ml-2">por Kubiotec</span>
           </h1>

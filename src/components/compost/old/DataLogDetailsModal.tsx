@@ -12,7 +12,7 @@ import {
 import { format, parseISO } from "date-fns";
 import { es } from 'date-fns/locale';
 import { Badge } from "@/components/ui/badge";
-import { Thermometer, Droplets, FlaskConical, Zap, FileText, CalendarDays, Sun } from "lucide-react";
+import { Thermometer, Droplets, FlaskConical, Zap, FileText, CalendarDays } from "lucide-react";
 
 interface DataLogDetailsModalProps {
   log: DataLog;
@@ -49,11 +49,10 @@ export default function DataLogDetailsModal({ log, isOpen, onOpenChange }: DataL
         </DialogHeader>
         <div className="grid gap-6 py-4">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <DetailItem icon={<Thermometer size={18} />} label="Temperatura Composta" value={log.temperature.toFixed(1)} unit="°C" />
+            <DetailItem icon={<Thermometer size={18} />} label="Temperatura" value={log.temperature.toFixed(1)} unit="°C" />
             <DetailItem icon={<Droplets size={18} />} label="Humedad" value={log.humidity.toFixed(1)} unit="%" />
             {log.ph !== undefined && <DetailItem icon={<FlaskConical size={18} />} label="pH" value={log.ph.toFixed(1)} />}
             {log.ec !== undefined && <DetailItem icon={<Zap size={18} />} label="CE" value={log.ec.toFixed(2)} unit="dS/m" />}
-            {log.ambientTemperature !== undefined && <DetailItem icon={<Sun size={18} />} label="Temp. Ambiental" value={log.ambientTemperature.toFixed(1)} unit="°C" />}
           </div>
           
           {log.notes && (
@@ -64,4 +63,3 @@ export default function DataLogDetailsModal({ log, isOpen, onOpenChange }: DataL
     </Dialog>
   );
 }
-

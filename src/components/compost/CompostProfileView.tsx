@@ -196,6 +196,9 @@ export default function CompostProfileView({ profile, onUpdateProfile }: Compost
     toast({ title: "Datos Importados", description: `${importedLogs.length} registros importados exitosamente.` });
   };
 
+  const safeDataLogs = Array.isArray(profile.dataLogs) ? profile.dataLogs : [];
+  const safeImages = Array.isArray(profile.images) ? profile.images : [];
+
   return (
     <div className="space-y-6">
       <Card>
@@ -330,7 +333,7 @@ export default function CompostProfileView({ profile, onUpdateProfile }: Compost
           </AccordionContent>
         </AccordionItem>
 
-        <AccordionItem value="data-history">
+        {/* <AccordionItem value="data-history">
           <AccordionTrigger className="text-xl font-semibold">Historial y Análisis de Datos</AccordionTrigger>
           <AccordionContent>
             <DataLogTable
@@ -348,13 +351,35 @@ export default function CompostProfileView({ profile, onUpdateProfile }: Compost
               <CompostCharts logs={profile.dataLogs} profileColor={profile.color} />
             </AccordionContent>
           </AccordionItem>
-        )}
+        )} */
         
+        }
+                <AccordionItem value="data-history">
+          <AccordionTrigger className="text-xl font-semibold">Historial y Análisis de Datos</AccordionTrigger>
+          <AccordionContent>
+            <DataLogTable
+              logs={safeDataLogs}
+              onUpdateLog={handleUpdateDataLog}
+              onDeleteLog={handleDeleteDataLog}
+            />
+          </AccordionContent>
+        </AccordionItem>
+
+        {safeDataLogs && safeDataLogs.length > 0 && (
+          <AccordionItem value="charts">
+            <AccordionTrigger className="text-xl font-semibold">Gráficos de Datos de Composta</AccordionTrigger>
+            <AccordionContent>
+              <CompostCharts logs={safeDataLogs} profileColor={profile.color} />
+            </AccordionContent>
+          </AccordionItem>
+        )}
+
+
         <AccordionItem value="image-gallery">
           <AccordionTrigger className="text-xl font-semibold">Galería de Seguimiento Visual</AccordionTrigger>
           <AccordionContent>
             <ImageGallery
-              images={profile.images}
+                images={safeImages}
               onAddImage={handleAddImage}
               onDeleteImage={handleDeleteImage}
             />
@@ -366,7 +391,7 @@ export default function CompostProfileView({ profile, onUpdateProfile }: Compost
           <AccordionContent>
             <CsvControls
               profileName={profile.name}
-              dataLogs={profile.dataLogs}
+              dataLogs={safeDataLogs}
               onImportData={handleImportData}
             />
           </AccordionContent>

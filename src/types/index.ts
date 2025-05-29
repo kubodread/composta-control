@@ -14,6 +14,7 @@ export interface DataLog {
   humidity: number; // Percentage
   ph?: number;
   ec?: number; // dS/m
+  ambientTemperature?: number; // Celsius, opcional
   notes?: string;
 }
 
@@ -40,4 +41,3 @@ export interface CNMaterial {
   ratio: string; // e.g., "20-30:1"
   type: 'carbon' | 'nitrogen';
 }
-

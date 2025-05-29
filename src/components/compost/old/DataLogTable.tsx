@@ -69,11 +69,10 @@ export default function DataLogTable({ logs, onUpdateLog, onDeleteLog }: DataLog
         <TableHeader>
           <TableRow>
             <TableHead>Fecha</TableHead>
-            <TableHead>Temp. Comp. (°C)</TableHead>
+            <TableHead>Temp (°C)</TableHead>
             <TableHead>Humedad (%)</TableHead>
             <TableHead>pH</TableHead>
             <TableHead>CE (dS/m)</TableHead>
-            <TableHead>Temp. Amb. (°C)</TableHead>
             <TableHead>Acciones</TableHead>
           </TableRow>
         </TableHeader>
@@ -85,7 +84,6 @@ export default function DataLogTable({ logs, onUpdateLog, onDeleteLog }: DataLog
               <TableCell>{log.humidity.toFixed(1)}</TableCell>
               <TableCell>{log.ph?.toFixed(1) ?? "-"}</TableCell>
               <TableCell>{log.ec?.toFixed(2) ?? "-"}</TableCell>
-              <TableCell>{log.ambientTemperature?.toFixed(1) ?? "-"}</TableCell>
               <TableCell className="space-x-1">
                 <Button variant="ghost" size="icon" onClick={() => setSelectedLog(log)} title="Ver Detalles">
                   <Eye className="h-4 w-4" />
@@ -124,7 +122,6 @@ export default function DataLogTable({ logs, onUpdateLog, onDeleteLog }: DataLog
                         humidity: logToEdit.humidity,
                         ph: logToEdit.ph,
                         ec: logToEdit.ec,
-                        ambientTemperature: logToEdit.ambientTemperature,
                         notes: logToEdit.notes,
                     }}
                     isEditMode={true}

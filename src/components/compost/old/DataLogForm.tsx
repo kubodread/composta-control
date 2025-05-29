@@ -12,7 +12,7 @@ import { cn } from "@/lib/utils";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
-import { CalendarIcon, Thermometer, Droplets, FlaskConical, Zap, FileText, Sun } from "lucide-react";
+import { CalendarIcon, Thermometer, Droplets, FlaskConical, Zap, FileText } from "lucide-react";
 import { useForm, Controller } from "react-hook-form";
 import * as z from "zod";
 import { useToast } from "@/hooks/use-toast";
@@ -23,7 +23,6 @@ const dataLogSchema = z.object({
   humidity: z.coerce.number().min(0, "Mín 0%").max(100, "Máx 100%"),
   ph: z.coerce.number().min(0).max(14).optional().or(z.literal("")),
   ec: z.coerce.number().min(0).optional().or(z.literal("")),
-  ambientTemperature: z.coerce.number().min(-50, "Demasiado bajo").max(70, "Demasiado alto").optional().or(z.literal("")),
   notes: z.string().optional(),
 });
 
@@ -45,7 +44,6 @@ export default function DataLogForm({ onSubmit, defaultValues, isEditMode = fals
       humidity: defaultValues?.humidity ?? undefined,
       ph: defaultValues?.ph ?? "",
       ec: defaultValues?.ec ?? "",
-      ambientTemperature: defaultValues?.ambientTemperature ?? "",
       notes: defaultValues?.notes ?? "",
     },
   });
@@ -57,7 +55,6 @@ export default function DataLogForm({ onSubmit, defaultValues, isEditMode = fals
       humidity: data.humidity,
       ...(data.ph !== "" && { ph: Number(data.ph) }),
       ...(data.ec !== "" && { ec: Number(data.ec) }),
-      ...(data.ambientTemperature !== "" && { ambientTemperature: Number(data.ambientTemperature) }),
       ...(data.notes && { notes: data.notes }),
     };
     onSubmit(submissionData);
@@ -68,7 +65,6 @@ export default function DataLogForm({ onSubmit, defaultValues, isEditMode = fals
         humidity: undefined,
         ph: "",
         ec: "",
-        ambientTemperature: "",
         notes: "",
       });
       toast({ title: "¡Datos Registrados!", description: "Nuevos datos de composta han sido registrados exitosamente." });
@@ -115,7 +111,7 @@ export default function DataLogForm({ onSubmit, defaultValues, isEditMode = fals
         />
 
         <div className="space-y-2">
-          <Label htmlFor="temperature" className="flex items-center"><Thermometer className="mr-2 h-4 w-4 text-primary" />Temperatura Composta (°C)</Label>
+          <Label htmlFor="temperature" className="flex items-center"><Thermometer className="mr-2 h-4 w-4 text-primary" />Temperatura (°C)</Label>
           <Input id="temperature" type="number" step="0.1" {...form.register("temperature")} placeholder="ej: 55.5" />
           {form.formState.errors.temperature && <p className="text-sm text-destructive">{form.formState.errors.temperature.message}</p>}
         </div>
@@ -137,12 +133,6 @@ export default function DataLogForm({ onSubmit, defaultValues, isEditMode = fals
           <Input id="ec" type="number" step="0.01" {...form.register("ec")} placeholder="ej: 2.5" />
           {form.formState.errors.ec && <p className="text-sm text-destructive">{form.formState.errors.ec.message}</p>}
         </div>
-
-        <div className="space-y-2">
-          <Label htmlFor="ambientTemperature" className="flex items-center"><Sun className="mr-2 h-4 w-4 text-primary" />Temperatura Ambiental (°C Amb., Opcional)</Label>
-          <Input id="ambientTemperature" type="number" step="0.1" {...form.register("ambientTemperature")} placeholder="ej: 27" />
-          {form.formState.errors.ambientTemperature && <p className="text-sm text-destructive">{form.formState.errors.ambientTemperature.message}</p>}
-        </div>
       </div>
         
       <div className="space-y-2">
@@ -156,5 +146,3 @@ export default function DataLogForm({ onSubmit, defaultValues, isEditMode = fals
     </form>
   );
 }
-
-    
