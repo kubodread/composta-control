@@ -1,114 +1,139 @@
-const CACHE_NAME = 'compost-controller-cache-v1';
-const URLS_TO_CACHE = [
-  '/',
+// Define un nombre de caché único y versionado.
+// Cambia este nombre cada vez que publiques una nueva versión de la app
+// para forzar al Service Worker a actualizarse y cachear los nuevos archivos.
+const CACHE_NAME = 'compost-controller-cache-v1.3';
+
+// El Service Worker necesita acceso a la lista de archivos generados por Next.js.
+// Next.js expone esto en una variable global `self.__BUILD_MANIFEST`.
+const buildManifest = self.__BUILD_MANIFEST;
+
+// Extraemos las URLs de los archivos JS, CSS y otros assets del manifiesto.
+// Esto incluye chunks de la app, páginas, etc.
+const urlsToCache = [
+  '/', // La página de inicio
   '/manifest.json',
-  // Puedes añadir aquí rutas a assets estáticos clave si los tienes fuera del build de Next.js
-  // Por ejemplo: '/images/logo.png', '/styles/global.css'
-  // Los assets de Next.js (/_next/static/...) son más complejos de cachear manualmente
-  // debido a los hashes en sus nombres. Una estrategia más robusta es necesaria para ellos.
-  '/icons/icon-192x192.png',
-  '/icons/icon-512x512.png'
+  '/icons/192x192.png',
+  '/icons/512x512.png',
+  ...Object.values(buildManifest.pages).flat(), // Archivos JS de las páginas
+  ...buildManifest.lowPriorityFiles.flat(), // Otros assets
+  ...build_manifest.root.flat(), // Archivos raiz
 ];
 
+
+// Evento 'install': Se dispara cuando el Service Worker se instala por primera vez.
 self.addEventListener('install', (event) => {
-  console.log('[Service Worker] Install event');
+  console.log('[Service Worker] Instalando...');
+  // Espera a que la promesa de abrir la caché y añadir todos los assets se resuelva.
   event.waitUntil(
     caches.open(CACHE_NAME)
       .then((cache) => {
-        console.log('[Service Worker] Opened cache:', CACHE_NAME);
-        return cache.addAll(URLS_TO_CACHE);
+        console.log('[Service Worker] Abriendo caché y añadiendo assets al precache:', urlsToCache);
+        return cache.addAll(urlsToCache);
       })
       .then(() => {
-        console.log('[Service Worker] All resources have been cached.');
-        return self.skipWaiting(); // Forza la activación del nuevo SW
+        console.log('[Service Worker] Todos los assets han sido cacheados. ¡Instalación completa!');
+        // Forzar al nuevo Service Worker a activarse inmediatamente.
+        return self.skipWaiting();
       })
-      .catch((error) => {
-        console.error('[Service Worker] Cache.addAll error:', error);
+      .catch(error => {
+        console.error('[Service Worker] Fallo al cachear assets durante la instalación:', error);
       })
   );
 });
 
+// Evento 'activate': Se dispara después de la instalación, cuando el SW se activa.
+// Es un buen lugar para limpiar cachés antiguas.
 self.addEventListener('activate', (event) => {
-  console.log('[Service Worker] Activate event');
+  console.log('[Service Worker] Activando...');
   event.waitUntil(
     caches.keys().then((cacheNames) => {
       return Promise.all(
         cacheNames.map((cacheName) => {
+          // Si el nombre de la caché no coincide con el actual, la eliminamos.
           if (cacheName !== CACHE_NAME) {
-            console.log('[Service Worker] Deleting old cache:', cacheName);
+            console.log(`[Service Worker] Limpiando caché antigua: ${cacheName}`);
             return caches.delete(cacheName);
           }
         })
       );
     }).then(() => {
-      console.log('[Service Worker] Claiming clients.');
-      return self.clients.claim(); // Toma control inmediato de las páginas
+      console.log('[Service Worker] Activación completa. Reclamando clientes...');
+      // Permite que el SW activo tome control inmediato de las páginas en su scope.
+      return self.clients.claim();
     })
   );
 });
 
+// Evento 'fetch': Se dispara cada vez que la aplicación realiza una petición de red.
 self.addEventListener('fetch', (event) => {
-  // Solo interceptamos peticiones GET
-  if (event.request.method !== 'GET') {
+  const { request } = event;
+  const url = new URL(request.url);
+
+  // Ignorar peticiones que no son GET.
+  if (request.method !== 'GET') {
     return;
   }
 
-  // Estrategia: Cache First para los elementos en URLS_TO_CACHE
-  // Para todo lo demás (especialmente chunks de Next.js), Network First
-  // Esta es una simplificación. Un PWA robusto en Next.js requiere una estrategia más sofisticada.
-
-  const requestUrl = new URL(event.request.url);
-
-  // Si es una URL que sabemos que debe estar en caché (p.ej. assets estáticos o el shell)
-  if (URLS_TO_CACHE.includes(requestUrl.pathname) || requestUrl.pathname.startsWith('/icons/')) {
+  // Estrategia Stale-While-Revalidate para las navegaciones (peticiones de HTML).
+  if (request.mode === 'navigate') {
     event.respondWith(
-      caches.match(event.request)
-        .then((response) => {
-          if (response) {
-            console.log('[Service Worker] Serving from cache:', event.request.url);
-            return response;
-          }
-          console.log('[Service Worker] Fetching from network (and caching):', event.request.url);
-          return fetch(event.request).then((networkResponse) => {
-            if (networkResponse && networkResponse.status === 200) {
-              const responseToCache = networkResponse.clone();
-              caches.open(CACHE_NAME)
-                .then((cache) => {
-                  cache.put(event.request, responseToCache);
-                });
-            }
-            return networkResponse;
-          });
-        })
-        .catch((error) => {
-          console.error('[Service Worker] Fetch error:', error);
-          // Podrías devolver una página offline aquí si la tienes cacheada
-        })
-    );
-  } else {
-    // Para otras peticiones (especialmente las de Next.js como _next/...),
-    // es mejor ir a la red primero para asegurar el contenido más reciente.
-    // Una estrategia "Stale-While-Revalidate" sería incluso mejor aquí.
-    event.respondWith(
-      fetch(event.request)
-        .then((networkResponse) => {
-          // Si la petición a la red tiene éxito, la cacheamos para futuras visitas offline (opcional)
-          if (networkResponse && networkResponse.status === 200 && requestUrl.protocol.startsWith('http')) {
-            const responseToCache = networkResponse.clone();
-            caches.open(CACHE_NAME)
-              .then((cache) => {
-                cache.put(event.request, responseToCache);
-              })
-              .catch(err => console.warn('[Service Worker] Failed to cache network response:', event.request.url, err));
-          }
+      caches.open(CACHE_NAME).then(async (cache) => {
+        // Intenta obtener la respuesta desde la red primero.
+        try {
+          const networkResponse = await fetch(request);
+          // Si tiene éxito, actualiza la caché y devuelve la respuesta de la red.
+          cache.put(request, networkResponse.clone());
           return networkResponse;
-        })
-        .catch(() => {
-          // Si la red falla, intentamos servir desde la caché si existe
-          console.log('[Service Worker] Network fetch failed, trying cache for:', event.request.url);
-          return caches.match(event.request);
-          // Aquí podrías devolver una página offline genérica si `caches.match` falla.
-        })
+        } catch (error) {
+          // Si la red falla, busca en la caché.
+          console.log('[Service Worker] Red falló, sirviendo desde caché para:', request.url);
+          return cache.match(request);
+        }
+      })
     );
+    return;
   }
+
+  // Estrategia Cache First para otros assets (JS, CSS, fuentes, imágenes locales).
+  // Estos archivos fueron pre-cacheados durante la instalación.
+  if (urlsToCache.includes(url.pathname)) {
+    event.respondWith(
+      caches.match(request).then((cachedResponse) => {
+        // Si la respuesta está en la caché, la devolvemos.
+        if (cachedResponse) {
+          return cachedResponse;
+        }
+        // Si no, intentamos obtenerla de la red (como fallback, aunque no debería ser necesario si el precacheo fue exitoso).
+        return fetch(request).then((networkResponse) => {
+          return networkResponse;
+        });
+      })
+    );
+    return;
+  }
+
+  // Estrategia Cache First, then Network para imágenes de placehold.co
+  if (url.hostname === 'placehold.co') {
+    event.respondWith(
+      caches.open(CACHE_NAME).then(async (cache) => {
+        const cachedResponse = await cache.match(request);
+        if (cachedResponse) {
+          return cachedResponse;
+        }
+        try {
+          const networkResponse = await fetch(request);
+          cache.put(request, networkResponse.clone());
+          return networkResponse;
+        } catch (error) {
+          console.error('[Service Worker] No se pudo obtener la imagen de placehold.co desde la red ni desde la caché:', error);
+          // Opcional: devolver una imagen de fallback si la red y la caché fallan.
+        }
+      })
+    );
+    return;
+  }
+
+
+  // Para cualquier otra petición, simplemente déjala pasar a la red.
+  event.respondWith(fetch(request));
 });
